@@ -9,7 +9,7 @@ import (
 type UnitDB interface {
 }
 
-// Config is a config for database connection
+// Config is a dsn for database connection
 type Config struct {
 	Host   string
 	Port   string
@@ -27,7 +27,7 @@ type unitDB struct {
 	setup    func(tx *sql.Tx)
 	fixtures []func(tx *sql.Tx)
 	teardown func(tx *sql.Tx)
-	config   string
+	dsn      string
 }
 
 // Option is any options for UnitDB
@@ -40,7 +40,7 @@ func NewUnitDB(t *testing.T, opts ...Option) (UnitDB, func()) {
 		opt(u)
 	}
 
-	db, err := sql.Open("mysql", u.config)
+	db, err := sql.Open("mysql", u.dsn)
 	if err != nil {
 		t.Fatalf("Fail to connect to MySQL %s", err)
 	}
@@ -71,10 +71,17 @@ func NewUnitDB(t *testing.T, opts ...Option) (UnitDB, func()) {
 	return u, teardown
 }
 
-// WithDB sets a config database
+// WithDB sets a dsn database
 func WithConfig(c Config) Option {
 	return func(u *unitDB) {
-		u.config = c.String()
+		u.dsn = c.String()
+	}
+}
+
+// WithDB sets a dsn database
+func WithDSN(dsn string) Option {
+	return func(u *unitDB) {
+		u.dsn = dsn
 	}
 }
 

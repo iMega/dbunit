@@ -7,6 +7,7 @@ import (
 )
 
 type UnitDB interface {
+	DB() *sql.DB
 }
 
 // Config is a dsn for database connection
@@ -28,10 +29,12 @@ type unitDB struct {
 	fixtures []func(tx *sql.Tx)
 	teardown func(tx *sql.Tx)
 	dsn      string
+	db       *sql.DB
 }
 
-// Option is any options for UnitDB
-type Option func(u *unitDB)
+func (u *unitDB) DB() *sql.DB {
+	return u.db
+}
 
 // NewUnitDB new instance
 func NewUnitDB(t *testing.T, opts ...Option) (UnitDB, func()) {
@@ -44,6 +47,7 @@ func NewUnitDB(t *testing.T, opts ...Option) (UnitDB, func()) {
 	if err != nil {
 		t.Fatalf("Fail to connect to MySQL %s", err)
 	}
+	u.db = db
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -70,6 +74,9 @@ func NewUnitDB(t *testing.T, opts ...Option) (UnitDB, func()) {
 
 	return u, teardown
 }
+
+// Option is any options for UnitDB
+type Option func(u *unitDB)
 
 // WithDB sets a dsn database
 func WithConfig(c Config) Option {
